@@ -43,10 +43,6 @@
         <label class="block text-sm font-medium mb-1">Target Clouds Tree</label>
         <input id="targetClouds" type="number" class="w-full rounded-xl border px-4 py-2" placeholder="contoh: 200" />
       </div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Hit per 1 Block (Cloud)</label>
-        <input id="cloudHitsPerBlock" type="number" class="w-full rounded-xl border px-4 py-2" value="3" />
-      </div>
       <div id="cloudResult" class="space-y-2 text-sm hidden"></div>
     </div>
 
@@ -59,9 +55,11 @@
       <div class="flex justify-between"><span>Modal TM</span><b id="rWL">0</b></div>
     </div>
 
-    <!-- Tombol Reset -->
+    <!-- RESET BUTTON -->
     <div class="text-center">
-      <button id="resetBtn" class="px-6 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600">Reset All</button>
+      <button id="resetBtn" class="px-6 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600">
+        Reset All
+      </button>
     </div>
 
     <p class="text-center text-sm text-slate-600">
@@ -77,15 +75,19 @@
   const CLOUDSTONE_SEED_PER_200 = 145;
 
   // FORMAT
-  const formatK = n => n >= 1_000_000 ? (Math.round(n/100_000)/10)+'M' : n >= 1_000 ? (Math.round(n/100)/10)+'k' : n;
-  const formatWL = n => n < 1 ? n.toFixed(3) : Number.isInteger(n) ? n : n.toFixed(2);
+  const formatK = n =>
+    n >= 1_000_000 ? (Math.round(n / 100_000) / 10) + 'M'
+    : n >= 1_000 ? (Math.round(n / 100) / 10) + 'k'
+    : n;
+
+  const formatWL = n =>
+    n < 1 ? n.toFixed(3) : Number.isInteger(n) ? n : n.toFixed(2);
 
   // ELEMENT
   const blocks = document.getElementById('blocks');
   const hitsPerBlock = document.getElementById('hitsPerBlock');
   const tmCount = document.getElementById('tmCount');
   const targetClouds = document.getElementById('targetClouds');
-  const cloudHitsPerBlock = document.getElementById('cloudHitsPerBlock');
 
   const rHits = document.getElementById('rHits');
   const rGems = document.getElementById('rGems');
@@ -105,7 +107,6 @@
     pageCloud.classList.add('hidden');
     btnTM.className = 'px-4 py-2 rounded-xl text-sm font-medium bg-slate-900 text-white';
     btnCloud.className = 'px-4 py-2 rounded-xl text-sm font-medium bg-white border';
-    updateTM();  // Update hasil umum ke TM saat switch
   };
 
   btnCloud.onclick = () => {
@@ -113,12 +114,10 @@
     pageTM.classList.add('hidden');
     btnCloud.className = 'px-4 py-2 rounded-xl text-sm font-medium bg-slate-900 text-white';
     btnTM.className = 'px-4 py-2 rounded-xl text-sm font-medium bg-white border';
-    updateCloud();  // Update hasil umum ke cloud saat switch
   };
 
   function updateTM() {
-    let b = Number(blocks.value || 0);
-    if (b < 0) b = 0;
+    const b = Number(blocks.value || 0);
     const hpb = Number(hitsPerBlock.value || 0);
     const hits = b * hpb;
     const gems = hits * GEM_PER_HIT;
@@ -138,33 +137,20 @@
   }
 
   function updateCloud() {
-    let t = Number(targetClouds.value || 0);
-    if (t < 0) t = 0;
+    const t = Number(targetClouds.value || 0);
     if (t <= 0) {
       cloudResult.classList.add('hidden');
-      // Reset hasil umum jika target 0
-      rHits.textContent = '0';
-      rGems.textContent = '0 gems';
-      rTime.textContent = '0';
-      rWL.textContent = '0 WL';
       return;
     }
 
-    const seedNeeded = Math.ceil((t * CLOUDSTONE_SEED_PER_200) / 200);
-    const dreamBlock = seedNeeded * 4;
-    const hits = dreamBlock * Number(cloudHitsPerBlock.value || 3);
+    const treeNeeded = Math.ceil((t / CLOUDSTONE_SEED_PER_200) * 200);
+    const dreamBlock = treeNeeded * 4;
+    const hits = dreamBlock * Number(hitsPerBlock.value || 3);
     const gems = hits * GEM_PER_HIT;
     const wl = gems / GEM_PER_WL;
 
-    // Update hasil umum dengan data cloud
-    rHits.textContent = formatK(hits);
-    rGems.textContent = formatK(gems) + ' gems';
-    rTime.textContent = '0';  // Tidak ada waktu untuk cloud
-    rWL.textContent = formatWL(wl) + ' WL';
-
     cloudResult.innerHTML = `
-      <div class='flex justify-between'><span>Seed perlu dibeli</span><b>${formatK(seedNeeded)}</b></div>
-      <div class='flex justify-between'><span>DStone block perlu dibeli</span><b>${formatK(dreamBlock)}</b></div>
+      <div class='flex justify-between'><span>Dreamstone block perlu dibeli</span><b>${formatK(dreamBlock)}</b></div>
       <div class='flex justify-between'><span>Total Hit</span><b>${formatK(hits)}</b></div>
       <div class='flex justify-between'><span>Gems</span><b>${formatK(gems)}</b></div>
       <div class='flex justify-between'><span>Modal TM</span><b>${formatWL(wl)} WL</b></div>
@@ -172,22 +158,26 @@
     cloudResult.classList.remove('hidden');
   }
 
-  // Reset All
+  // RESET ALL
   resetBtn.onclick = () => {
     blocks.value = '';
     hitsPerBlock.value = '3';
     tmCount.value = '1';
     targetClouds.value = '';
-    cloudHitsPerBlock.value = '3';
-    updateTM();
-    updateCloud();
+
+    rHits.textContent = '0';
+    rGems.textContent = '0';
+    rTime.textContent = '0';
+    rWL.textContent = '0';
+
+    cloudResult.classList.add('hidden');
+    btnTM.onclick();
   };
 
   blocks.oninput = updateTM;
   hitsPerBlock.oninput = () => { updateTM(); updateCloud(); };
   tmCount.oninput = updateTM;
   targetClouds.oninput = updateCloud;
-  cloudHitsPerBlock.oninput = updateCloud;
 </script>
 </body>
 </html>
